@@ -1,0 +1,382 @@
+import os.path
+from pathlib import Path
+import urllib
+
+from enaml.application import deferred_call
+from enaml.core.api import Looper
+from enaml.layout.api import hbox, InsertItem, InsertTab, spacer, vbox
+from enaml.stdlib.dialog_buttons import DialogButton
+from enaml.stdlib.message_box import warning
+from enaml.stdlib.message_box import critical
+from enaml.widgets.api import (Action, ActionGroup, CheckBox, Container,
+                               DockArea, DockItem, GroupBox, Label, Feature, Form,
+                               HGroup, MainWindow, Menu, MPLCanvas,
+                               ObjectCombo, ProgressBar, PushButton,
+                               ToolButton, VGroup)
+
+from .datatype import Point
+
+
+def bind(figure, presenter):
+    i = Interactor(presenter)
+    figure.canvas.mpl_connect('key_press_event', lambda e: i.key_press(e))
+    figure.canvas.mpl_connect('pick_event', lambda e: i.pick_event(e))
+    figure.canvas.mpl_connect('motion_notify_event', lambda e: i.motion_notify(e))
+    figure.canvas.mpl_connect('button_release_event', lambda e: i.button_release(e))
+
+
+class Interactor:
+
+    def __init__(self, presenter):
+        self.selected_point = None
+        self.presenter = presenter
+
+    def pick_event(self, event):
+        for i, line_plot in enumerate(self.presenter.plots):
+            if line_plot.plot == event.artist:
+                self.presenter.current = i
+                if not self.presenter.threshold_marked:
+                    self.presenter.set_threshold()
+            for point, point_plot in line_plot.point_plots.items():
+                if point_plot.plot == event.artist:
+                    self.selected_point = point
+                    self.presenter.toggle = point
+                    self.presenter.current = i
+                    return
+
+    def button_release(self, event):
+        self.selected_point = None
+
+    def motion_notify(self, event):
+        if self.selected_point is not None:
+            self.presenter.set_selected_point(event.xdata)
+
+    def key_press(self, event):
+        try:
+            if event.key == 'down':
+                self.presenter.current -= 1
+            elif event.key == 'up':
+                self.presenter.current += 1
+            elif event.key == 't':
+                self.presenter.set_threshold()
+            elif event.key == 'alt+up':
+                self.presenter.set_subthreshold()
+            elif event.key == 'alt+down':
+                self.presenter.set_suprathreshold()
+            elif event.key in ('-', '_'):
+                self.presenter.scale *= 1.1
+            elif event.key in ('=', '+'):
+                self.presenter.scale *= 0.9
+            elif event.key == 'i':
+                self.presenter.guess()
+            elif event.key == 'u':
+                self.presenter.update_point()
+            elif event.key == 's':
+                self.presenter.save()
+            elif event.key == 'right':
+                self.presenter.move_selected_point(('zero_crossing', 1))
+            elif event.key == 'left':
+                self.presenter.move_selected_point(('zero_crossing', -1))
+            elif event.key == 'alt+right':
+                self.presenter.move_selected_point(('time', 1e-5))
+            elif event.key == 'alt+left':
+                self.presenter.move_selected_point(('time', -1e-5))
+            elif event.key == 'n':
+                self.presenter.normalized = not self.presenter.normalized
+            elif event.key in ('1', '2', '3', '4', '5'):
+                self.presenter.toggle = int(event.key), Point.PEAK
+            elif event.key in ('alt+1', 'alt+2', 'alt+3', 'alt+4', 'alt+5'):
+                self.presenter.toggle = int(event.key[-1]), Point.VALLEY
+            elif event.key == 'pagedown':
+                self.presenter.load_next()
+            elif event.key == 'pageup':
+                self.presenter.load_prior()
+        except Exception as e:
+            critical(None, 'Error', str(e))
+
+
+def get_title(frequency, filename, show_filename):
+    if show_filename:
+        filename = os.path.split(os.path.split(filename)[0])[1]
+        return '{} kHz: {}'.format(frequency, filename)
+    else:
+        return '{} kHz'.format(frequency)
+
+
+enamldef MPLContainer(Container): di:
+
+    attr presenter
+    attr analyzed_filenames = []
+
+    constraints = [
+        vbox(
+            #keys,
+            hbox(show_filename, supra, sub, load, spacer),
+            #hbox(guess, clear, spacer),
+            hbox(clear, spacer),
+            filename,
+            canvas
+        ),
+        supra.width == sub.width,
+        load.width == 200,
+    ]
+
+    #GroupBox: keys:
+    #    Label:
+    #        text =  't\t\t\tset threshold'
+    #    Label:
+    #        text =  '<number key>\t\tselect peak'
+    #    Label:
+    #        text =  'Alt + <number key>\tselect valley'
+    #    Label:
+    #        text =  '<up/down key>\t\tselect waveform'
+    #    Label:
+    #        text =  '<left/right key>\t\tmove selected peak/valley'
+
+    ToolButton: load:
+        text = 'Load analysis'
+        popup_mode = 'instant'
+        Menu:
+            Looper: looper:
+                iterable << analyzed_filenames[:]
+                Menu:
+                    title << loop_item.stem
+                    Action:
+                        text = 'Plot'
+                        triggered ::
+                            presenter.load_analysis(loop_item)
+                    Action:
+                        text = 'Delete'
+                        triggered ::
+                            mesg = 'Are you sure you want to remove this file?'
+                            buttons = [
+                                DialogButton('Yes', 'accept'),
+                                DialogButton('No', 'reject'),
+                            ]
+                            result = warning(None, 'Delete', mesg, buttons)
+                            if result.text == 'Yes':
+                                loop_item.unlink()
+                                items = di.analyzed_filenames[:]
+                                items.remove(loop_item)
+                                di.analyzed_filenames = items
+
+    #ToolButton: guess:
+    #    text = 'Guess'
+    #    popup_mode = 'instant'
+    #    Menu:
+    #        Action:
+    #            text = 'Peaks'
+    #            triggered ::
+    #                presenter.guess_peaks()
+    #        Action:
+    #            text = 'Valleys'
+    #            triggered ::
+    #                presenter.guess_valleys()
+
+    ToolButton: clear:
+        text = 'Clear'
+        popup_mode = 'instant'
+        Menu:
+            Action:
+                text = 'All'
+                triggered ::
+                    presenter.clear_points()
+            Action:
+                text = 'Peaks'
+                triggered::
+                    presenter.clear_peaks()
+            Action:
+                text = 'Valleys'
+                triggered ::
+                    presenter.clear_valleys()
+
+
+    PushButton: supra:
+        text = 'All above threshold'
+        clicked ::
+            presenter.set_suprathreshold()
+
+    PushButton: sub:
+        text = 'All below threshold'
+        clicked ::
+            presenter.set_subthreshold()
+
+    CheckBox: show_filename:
+        checked = False
+        text = 'Show info'
+
+    Label: filename:
+        visible << show_filename.checked
+        text << '{} {} Hz'.format(getattr(presenter.model, 'id', ''), 
+                                  getattr(presenter.model, 'freq', ''))
+
+    MPLCanvas: canvas:
+        figure << presenter.figure
+        toolbar_visible = False
+        initialized ::
+            deferred_call(bind, figure, presenter)
+
+
+enamldef SerialWindow(MainWindow):
+
+    alias presenter: container.presenter
+
+    initial_size = (600, 900)
+    title = 'ABR loop'
+
+    Container:
+        constraints = [
+            vbox(
+                hbox(label, progress),
+                container
+            )
+        ]
+
+        Label: label:
+            text = 'Progress (n={})'.format(len(presenter.unprocessed))
+        ProgressBar: progress:
+            value << presenter.current_model
+            maximum << len(presenter.unprocessed)
+            text_visible = True
+
+        MPLContainer: container:
+            padding = 0
+
+
+enamldef MPLDockItem(DockItem):
+
+    alias presenter: container.presenter
+    alias analyzed_filenames: container.analyzed_filenames
+
+    MPLContainer: container:
+        pass
+
+
+def add_dock_item(dock_area, model, path, presenter, analyzed_filenames):
+    items = dock_area.dock_items()
+    n_items = len(items)
+    target = items[-1].name if n_items else ''
+    title = '{:.2f} kHz - {}'.format(model.freq, os.path.basename(path))
+    item = MPLDockItem(dock_area,
+                       name='dock_{}'.format(n_items),
+                       title=title,
+                       presenter=presenter,
+                       analyzed_filenames=analyzed_filenames)
+    op = InsertTab(item=item.name, target=target)
+    dock_area.update_layout(op)
+
+
+def load_files(parser, latencies, filenames, dock_area):
+    from abr.presenter import WaveformPresenter
+    for filename, frequencies in filenames:
+        for model in parser.load(filename, frequencies):
+            try:
+                analyzed_filenames = \
+                    parser.find_analyzed_files(model.filename, model.freq)
+                presenter = WaveformPresenter(parser, latencies)
+                add_dock_item(dock_area, model, filename, presenter,
+                              analyzed_filenames)
+                presenter.load(model)
+            except FileNotFoundError:
+                mesg = 'Could not load ABR data from {}'.format(path)
+                critical(None, 'Could not load file', mesg)
+
+
+enamldef DNDWindow(MainWindow):
+
+    attr parser
+    attr latencies
+
+    initial_size = (600, 900)
+
+    Container:
+
+        DockArea: dock_area:
+            name = 'dock_area'
+            features = Feature.DropEnabled
+
+            drag_enter => (event):
+                if event.mime_data().has_format('text/uri-list'):
+                    event.accept_proposed_action()
+
+            drop => (event):
+                text = event.mime_data().data('text/uri-list').decode('utf-8')
+                filenames = []
+                for t in text.strip().split('\n'):
+                    t = urllib.parse.unquote(t).strip()
+                    fragments = urllib.parse.urlsplit(t)
+                    path = Path(urllib.request.url2pathname(fragments.path))
+                    filenames.append((path, None))
+                load_files(parser, latencies, filenames, dock_area)
+
+
+def mpl_connect(figure, event, handler):
+    figure.canvas.mpl_connect(event, handler)
+
+
+enamldef CompareWindow(MainWindow):
+
+    attr compare
+    attr parser
+
+    initial_size = (1000, 600)
+
+    initialized ::
+        compare.observe('selected', selected_changed)
+
+    func selected_changed(event):
+        load_files(parser, {}, event['value'], dock_area)
+
+    Container:
+
+        constraints = [
+            hbox(
+                vbox(
+                    hbox(x_label, x_select),
+                    hbox(y_label, y_select),
+                    hbox(d_label, d_checkbox),
+                    hbox(j_label, j_checkbox),
+                    canvas,
+                ),
+                dock_area
+            ),
+            x_label.width == y_label.width,
+            x_label.width == d_label.width,
+            x_label.width == j_label.width,
+            x_select.width == y_select.width
+        ]
+
+        Label: x_label:
+            text = 'X'
+
+        ObjectCombo: x_select:
+            items << list(compare.data.columns)
+            selected := compare.x_column
+
+        Label: y_label:
+            text = 'Y'
+
+        ObjectCombo: y_select:
+            items << list(compare.data.columns)
+            selected := compare.y_column
+
+        Label: d_label:
+            text = 'Plot as difference'
+
+        CheckBox: d_checkbox:
+            checked := compare.as_difference
+
+        Label: j_label:
+            text = 'Jitter data'
+
+        CheckBox: j_checkbox:
+            checked := compare.jitter
+
+        MPLCanvas: canvas:
+            figure << compare.figure
+            initialized ::
+                deferred_call(mpl_connect, compare.figure, 'pick_event',
+                              compare.pick_handler)
+
+        DockArea: dock_area:
+            name = 'dock_area'
