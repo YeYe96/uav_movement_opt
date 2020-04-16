@@ -31,6 +31,7 @@ class UAV():
     def act(self,action):
         yield self.env.simenv.process(self.ACTION_FUNCTION_MAP[action]())
         self.battery -= 1
+        return self.coord_x,self.coord_y,self.coord_z
 
     def _add_x(self):
         if self.coord_x != 25:
@@ -75,7 +76,8 @@ class UAV():
         state_representation = np.concatenate([
             self.coord_x,
             self.coord_y,
-            self.coord_z
+            self.coord_z,
+            self.battery
         ])
         return state_representation
 
