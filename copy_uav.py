@@ -1,3 +1,4 @@
+import simpy
 import random
 import numpy as np
 
@@ -6,30 +7,29 @@ class UAV():
     action_space_size = 7
 
     #def __init__(self, env, init_floor, weightLimit, id) 原本有一个weightlimit 可以改为battery？
-    def __init__(self,coord_x,coord_y,coord_z,battery,id):
+    def __init__(self,env,coord_x,coord_y,coord_z,battery,id):
+        self.env = env
         self.coord_x = coord_x
         self.coord_y = coord_y
         self.coord_z = coord_z
         self.battery = battery
         self.id = id
         self.current_reward = 0
+        self.last_decision_epoch = self.env.simenv.now
+
+
+        self.ACTION_FUNCTION_MAP = {
+            0: self._add_x,
+            1: self._sub_x,
+            2: self._add_y,
+            3: self._sub_y,
+            4: self._add_z,
+            5: self._sub_z,
+            6: self._hover,
+        }
 
     def act(self,action):
-        self.battery -= 1
-        if action == 0:
-            self._add_x()
-        if action == 1:
-            self._sub_x()
-        if action == 2:
-            self._add_y()
-        if action == 3:
-            self._sub_y()
-        if action == 4:
-            self._add_z()
-        if action == 5:
-            self._sub_z()
-        if action == 6:
-            self._hover()
+        yield self.env.simenv.process(self.ACTION_FUNCTION_MAP[action]())
         self.battery -= 1
         return self.coord_x,self.coord_y,self.coord_z
 
@@ -66,12 +66,14 @@ class UAV():
         self.current_reward += reward
         return True
 
-    def get_reward(self):
+    def get_reward(self,decision_epoch):
         output = self.current_reward
+        if decision_epoch:
+            self.current_reward = 0
         return output
 
-    def get_states(self):
-        state_representation = np.hstack([
+    def get_states(self,decision):
+        state_representation = np.concatenate([
             self.coord_x,
             self.coord_y,
             self.coord_z,
