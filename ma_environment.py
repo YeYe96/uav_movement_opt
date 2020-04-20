@@ -4,7 +4,7 @@ from uav import UAV
 
 
 #NUM_UAV = 10
-np.random.seed(1234)
+#np.random.seed(1234)
 pop_dens_list = np.random.randint(0,100,size=(26,26))
 
 
@@ -21,7 +21,6 @@ alpha = 0.3
 belta = 500
 gt = 0
 gr = 1
-
 '''
 class Uav:
     def __init__(self,position_x,positopn_y,position_z,action,action_size):
@@ -47,36 +46,49 @@ class Environment:
 
     def step(self,actions):
         self.uavs_act = []
-        self.states = []
         for idx,a in enumerate(actions):
-            print("states: ", self.uavs[idx].get_states())
+#            print("states %d: " %(idx), self.uavs[idx].get_states())
+            self.states = [self.uavs[idx].coord_x,
+                           self.uavs[idx].coord_y,
+                           self.uavs[idx].coord_z,
+                           self.uavs[idx].battery]
             self.uavs_act.append(self.uavs[idx].act(a))
 #            uav_coord = np.concatenate(self.uavs[idx].coord_x,
 #                                  self.uavs[idx].coord_y,
 #                                  self.uavs[idx].coord_z)
 #            self.states.append(uav_coord)
+            states_ = self.get_states(self.nUAV)
+            if self.uavs[idx].battery == 0:
+                print('uav%d is back: ' %idx)
+                self.uavs[idx].coord_x = 0
+                self.uavs[idx].coord_y = 0
+                self.uavs[idx].coord_z = 1
+                self.uavs[idx].battery = 150
             output = {
             "states": self.states,
             "states_":self.get_states(self.nUAV),
             "power_uav": self.get_rewards(self.nUAV),
             }
+#        print(actions)
+#        print('output: ',output)
         reward = self.calculate_reward()
         return output,reward
 
     def get_states(self,nuav):
-        return [self.uavs[idx].get_states() for idx in nuav]
+        return [self.uavs[idx].get_states() for idx in range(nuav)]
 
     def get_rewards(self,nuav):
-        return  [self.uavs[idx].get_reward() for idx in nuav]
+        return  [self.uavs[idx].get_reward() for idx in range(nuav)]
 
     def reset(self):
         '''
         参数暂时不加
         '''
-        self.uavs = [UAV(0,0,0,150,id) for id in range(self.nUAV)]
+        self.uavs = [UAV(0,0,1,150,id) for id in range(self.nUAV)]
         self.bs_state = np.array([0, 1, 1, 0])
         self.bs_coord = [[7, 7], [7, 19], [19, 7], [19, 19]]
         self.final_rate = []
+        self.count = 0
 
 
     def calculate_reward(self):
@@ -104,10 +116,10 @@ class Environment:
                 count_idx = -1
                 for nuav in self.uavs:
                     count_idx += 1
-                    uav_cal_coord = np.hstack(nuav.coord_x,nuav.coord_y)
-                    uav2user_dist = math.sqrt((nuav.coord_z**2) + self.list_sqadd(uav_cal_coord,user_coord))*10
+                    uav_cal_coord = np.hstack((nuav.coord_x,nuav.coord_y))
+                    uav2user_dist = math.sqrt((nuav.coord_z**2) + sum(self.list_sqadd(uav_cal_coord,user_coord)))*10
 #                    uav2uav_coord.append(np.hstack(nuav.coord_x,nuav.coord_y,nuav.coord_z))
-                    if uav2user_dist < 60:
+                    if uav2user_dist < 100:
                         theta = math.atan(nuav.coord_z / uav2user_dist)
                         probability_los = (1 + alpha * math.exp(-belta * ((180 / math.pi) * theta - alpha))) ** (-1)
                         probability_nlos = 1 - probability_los
@@ -139,8 +151,17 @@ class Environment:
                     SINR = max(power_uav) / ((N0 * bandwidth + interference_bs + sum(power_uav) - max(power_uav)))
 
                 rate_list.append((bandwidth * math.log2(1 + SINR))*user_dens)
+        self.count += 1
+        print('rate%d: '%self.count, sum(rate_list)/10)
+        if sum(rate_list) == 0:
+            states = []
+            for idx, a in enumerate(actions):
+                #            print("states %d: " %(idx), self.uavs[idx].get_states())
+                states.append([self.uavs[idx].coord_x,
+                               self.uavs[idx].coord_y,
+                               self.uavs[idx].coord_z])
+            print(states)
         self.final_rate.append(sum(rate_list))
-
         return sum(self.final_rate) / 1500
 
 if __name__=="__main__":
@@ -149,6 +170,11 @@ if __name__=="__main__":
     env.reset()
     print(env.uavs)
     for i in range(1000):
-        actions = np.random.randint(0,6,nUAV)
-        print(env.step(actions))
-        continue
+        actions = np.random.randint(0,7,nUAV)
+        act = env.step(actions)
+#        print(sum([env.uavs[idx].get_reward() for idx in range(nUAV)]) / 10)
+#        print(env.step(actions))
+#        continue
+'''
+reward在约50步之后均保持不变？
+'''

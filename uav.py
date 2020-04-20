@@ -5,7 +5,6 @@ class UAV():
     action_space = np.array([0,1,2,3,4,5,6])
     action_space_size = 7
 
-    #def __init__(self, env, init_floor, weightLimit, id) 原本有一个weightlimit 可以改为battery？
     def __init__(self,coord_x,coord_y,coord_z,battery,id):
         self.coord_x = coord_x
         self.coord_y = coord_y
@@ -15,7 +14,6 @@ class UAV():
         self.current_reward = 0
 
     def act(self,action):
-        self.battery -= 1
         if action == 0:
             self._add_x()
         if action == 1:
@@ -54,7 +52,7 @@ class UAV():
             self.coord_z += 1
 
     def _sub_z(self):
-        if self.coord_z != 0:
+        if self.coord_z != 0 & self.coord_z >1:
             self.coord_z -= 1
 
     def _hover(self):
