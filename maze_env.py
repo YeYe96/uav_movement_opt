@@ -23,11 +23,11 @@ bs_state = np.array([1,0,1,0])
 class Maze(tk.Tk,object):
     def __init__(self):
         super(Maze,self).__init__()
-        self.action_space = [['u','d','l','r','s'] for i in range(NUM_UAV)]
-        self.n_actions = len(self.action_space[0])
-        self.n_actions_sum = len(self.action_space) * self.n_actions
+        self.action_space = ['u','d','l','r','s']
+        self.n_actions = len(self.action_space)
+#        self.n_actions_sum = len(self.action_space) * self.n_actions
         self.n_features = 2
-        self.n_features_sum = self.n_features * NUM_UAV
+#        self.n_features_sum = self.n_features * NUM_UAV
         self.title('maze')
         self.geometry('{0}x{1}'.format(MAZE_H*UNIT,MAZE_W*UNIT))
         self._build_maze()
@@ -67,9 +67,6 @@ class Maze(tk.Tk,object):
                                                                   self.base_station_3_center[0]+8.25, self.base_station_3_center[1]+8.25,
                                                                   fill = 'blue')
 
-        self.UAV_0_rect = self.canvas.create_rectangle(origin[0]-8.25, origin[1]-8.25,
-                                                       origin[0]+8.25, origin[1]+8.25,
-                                                       fill = 'yellow')
         self.UAV_1_rect = self.canvas.create_rectangle(origin[0] - 8.25, origin[1] - 8.25,
                                                        origin[0] + 8.25, origin[1] + 8.25,
                                                        fill='yellow')

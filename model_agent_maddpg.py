@@ -86,4 +86,4 @@ class MADDPG():
 
     def Q(self, state, action, other_action, sess):
         return sess.run(self.critic_output,
-                        {self.state_input: state, self.action_input: action, self.other_action_input: other_action}) 
+                        {self.state_input: state, self.action_input: action, self.other_action_input: other_action})
