@@ -72,7 +72,7 @@ class Environment:
 #        print(actions)
 #        print('output: ',output)
         reward = self.calculate_reward()
-        return output,reward
+        return states_,reward
 
     def get_states(self,nuav):
         return [self.uavs[idx].get_states() for idx in range(nuav)]
@@ -89,6 +89,10 @@ class Environment:
         self.bs_coord = [[7, 7], [7, 19], [19, 7], [19, 19]]
         self.final_rate = []
         self.count = 0
+        obs = []
+        for idx in range(self.nUAV):
+            obs.append(self.uavs[idx].get_states())
+        return obs
 
 
     def calculate_reward(self):
@@ -111,7 +115,7 @@ class Environment:
                 distance.append(min(bs_dist))   #找到最近的MBS
                 uav_dist = np.array([0 for num in range(self.nUAV)])
 
-                power_uav = [0 for i in range(10)]
+                power_uav = [0 for i in range(self.nUAV)]
 #                uav_dist = []
                 count_idx = -1
                 for nuav in self.uavs:
@@ -152,7 +156,7 @@ class Environment:
 
                 rate_list.append((bandwidth * math.log2(1 + SINR))*user_dens)
         self.count += 1
-        print('rate%d: '%self.count, sum(rate_list)/10)
+        print('rate%d: '%self.count, sum(rate_list)/self.nUAV)
         if sum(rate_list) == 0:
             states = []
             for idx, a in enumerate(actions):
@@ -162,7 +166,7 @@ class Environment:
                                self.uavs[idx].coord_z])
             print(states)
         self.final_rate.append(sum(rate_list))
-        return sum(self.final_rate) / 1500
+        return sum(self.final_rate) / 150*self.nUAV
 
 if __name__=="__main__":
     nUAV = 10
