@@ -75,11 +75,27 @@ if __name__ == '__main__':
     agent_reward_v = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
     agent_reward_op = [tf.summary.scalar('agent' + str(i) + '_reward', agent_reward_v[i]) for i in range(3)]
 
+    agent_a0 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
+    agent_a0_op = [tf.summary.scalar('agent' + str(i) + '_action_0', agent_a0[i]) for i in range(3)]
+
     agent_a1 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
     agent_a1_op = [tf.summary.scalar('agent' + str(i) + '_action_1', agent_a1[i]) for i in range(3)]
 
     agent_a2 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
     agent_a2_op = [tf.summary.scalar('agent' + str(i) + '_action_2', agent_a2[i]) for i in range(3)]
+
+    agent_a3 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
+    agent_a3_op = [tf.summary.scalar('agent' + str(i) + '_action_3', agent_a3[i]) for i in range(3)]
+
+    agent_a4 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
+    agent_a4_op = [tf.summary.scalar('agent' + str(i) + '_action_4', agent_a4[i]) for i in range(3)]
+
+    agent_a5 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
+    agent_a5_op = [tf.summary.scalar('agent' + str(i) + '_action_5', agent_a5[i]) for i in range(3)]
+
+    agent_a6 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
+    agent_a6_op = [tf.summary.scalar('agent' + str(i) + '_action_6', agent_a6[i]) for i in range(3)]
+
 
     reward_100 = [tf.Variable(0, dtype=tf.float32) for i in range(3)]
     reward_100_op = [tf.summary.scalar('agent' + str(i) + '_reward_l100_mean', reward_100[i]) for i in range(3)]
@@ -110,20 +126,29 @@ if __name__ == '__main__':
                                                     {reward_1000[agent_index]: np.mean(reward_100_list[agent_index])}),
                                            i // 1000)
 
-        print('o_n:',o_n)
+#        print('o_n:',o_n)
         agent1_action, agent2_action, agent3_action = get_agents_action(o_n, sess, noise_rate=0.2)
-
+#        print('a:', agent1_action)
         #三个agent的行动
 
-        a = [[0, i[0][0], 0, i[0][1], 0] for i in [agent1_action, agent2_action, agent3_action]]
-        print('a',a)
-        print('shape_a',np.shape(a))
+#        a = [[np.argmax(i)] for  i in [agent1_action,
+#                                       agent2_action,
+#                                       agent3_action]]
+#        a = [[0, i[0][0], 0, i[0][1], 0] for i in [agent1_action, agent2_action, agent3_action]]
+
+        a = [[i[0][0],i[0][1],
+              i[0][2],i[0][3],
+              i[0][4],i[0][5],
+              i[0][6]] for i in [agent1_action,agent2_action,agent3_action]]
+
+#        print('a',a)
+#        print('shape_a',np.shape(a))
 
         o_n_next, r_n = env.step(a)
-        print(r_n)
+#        print(r_n)
 
         for agent_index in range(3):
-            print('r_n',r_n[agent_index])
+#            print('r_n',r_n[agent_index])
             reward_100_list[agent_index].append(r_n[agent_index])
             reward_100_list[agent_index] = reward_100_list[agent_index][-1000:]
 
@@ -152,18 +177,29 @@ if __name__ == '__main__':
                         agent3_critic_target_update, sess, [agent1_ddpg_target, agent2_ddpg_target])
 
         for agent_index in range(3):
+#            print(agent_index)
             summary_writer.add_summary(
                 sess.run(agent_reward_op[agent_index], {agent_reward_v[agent_index]: r_n[agent_index]}), i)
-            summary_writer.add_summary(sess.run(agent_a1_op[agent_index], {agent_a1[agent_index]: a[agent_index][1]}),
+            summary_writer.add_summary(sess.run(agent_a0_op[agent_index], {agent_a1[agent_index]: a[agent_index][0]}),
                                        i)
-            summary_writer.add_summary(sess.run(agent_a2_op[agent_index], {agent_a2[agent_index]: a[agent_index][3]}),
+            summary_writer.add_summary(sess.run(agent_a1_op[agent_index], {agent_a2[agent_index]: a[agent_index][1]}),
+                                       i)
+            summary_writer.add_summary(sess.run(agent_a2_op[agent_index], {agent_a2[agent_index]: a[agent_index][2]}),
+                                       i)
+            summary_writer.add_summary(sess.run(agent_a3_op[agent_index], {agent_a2[agent_index]: a[agent_index][3]}),
+                                       i)
+            summary_writer.add_summary(sess.run(agent_a4_op[agent_index], {agent_a2[agent_index]: a[agent_index][4]}),
+                                       i)
+            summary_writer.add_summary(sess.run(agent_a5_op[agent_index], {agent_a2[agent_index]: a[agent_index][5]}),
+                                       i)
+            summary_writer.add_summary(sess.run(agent_a6_op[agent_index], {agent_a2[agent_index]: a[agent_index][6]}),
                                        i)
             summary_writer.add_summary(
                 sess.run(reward_100_op[agent_index], {reward_100[agent_index]: np.mean(reward_100_list[agent_index])}),
                 i)
 
+        print('i:', i, 'reward: ', r_n, 'state: ', o_n)
         o_n = o_n_next
-
         if i % 1000 == 0:
             saver.save(sess, './three_ma_weight/' + str(i) + '.cptk')
 
