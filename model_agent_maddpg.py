@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow.contrib as tc
 
 class MADDPG():
-    def __init__(self, name, layer_norm=True, nb_actions=7, nb_input=4, nb_other_aciton=7*2):
+    def __init__(self, name, layer_norm=True, nb_actions=1, nb_input=4, nb_other_aciton=2):
         gamma = 0.999
         self.layer_norm = layer_norm
         self.nb_actions = nb_actions

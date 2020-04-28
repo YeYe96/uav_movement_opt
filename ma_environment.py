@@ -4,7 +4,7 @@ from uav import UAV
 
 
 #NUM_UAV = 10
-#np.random.seed(1234)
+np.random.seed(1234)
 pop_dens_list = np.random.randint(0,100,size=(26,26))
 
 
@@ -48,19 +48,36 @@ class Environment:
         self.uavs_act = []
         for idx,a in enumerate(actions):
 #            print("states %d: " %(idx), self.uavs[idx].get_states())
+#            print('idx: ', idx)
+#            print(type(actions[idx]))
             self.states = [self.uavs[idx].coord_x,
                            self.uavs[idx].coord_y,
                            self.uavs[idx].coord_z,
                            self.uavs[idx].battery]
-            physic_action = np.argmax(a[idx])
+#            physic_action = np.argmax(a[idx])
+            if 0<a[0]<1/7:
+                physic_action = 0
+            elif 1/7<a[0]<2/7:
+                physic_action = 1
+            elif 2/7<a[0]<3/7:
+                physic_action = 2
+            elif 3/7<a[0]<4/7:
+                physic_action = 3
+            elif 4/7<a[0]<5/7:
+                physic_action = 4
+            elif 5/7<a[0]<6/7:
+                physic_action = 5
+            else:
+                physic_action = 6
             self.uavs_act.append(self.uavs[idx].act(physic_action))
 #            uav_coord = np.concatenate(self.uavs[idx].coord_x,
 #                                  self.uavs[idx].coord_y,
 #                                  self.uavs[idx].coord_z)
 #            self.states.append(uav_coord)
             states_ = self.get_states(self.nUAV)
+#            print('states: ',states_)
             if self.uavs[idx].battery == 0:
-                print('uav%d is back: ' %idx)
+#                print('uav%d is back: ' %idx)
                 self.uavs[idx].coord_x = 0
                 self.uavs[idx].coord_y = 0
                 self.uavs[idx].coord_z = 1
@@ -185,7 +202,7 @@ class Environment:
                 states.append([self.uavs[idx].coord_x,
                                self.uavs[idx].coord_y,
                                self.uavs[idx].coord_z])
-            print(states)
+#            print(states)
         self.final_rate.append(sum(rate_list))
         return power_list,sum(self.final_rate) / 150*self.nUAV
 
