@@ -46,6 +46,7 @@ class Environment:
 
     def step(self,actions):
         self.uavs_act = []
+        states_ = []
         for idx,a in enumerate(actions):
 #            print("states %d: " %(idx), self.uavs[idx].get_states())
 #            print('idx: ', idx)
@@ -74,7 +75,7 @@ class Environment:
 #                                  self.uavs[idx].coord_y,
 #                                  self.uavs[idx].coord_z)
 #            self.states.append(uav_coord)
-            states_ = self.get_states(self.nUAV)
+            states_.append(self.uavs[idx].get_states())
 #            print('states: ',states_)
             if self.uavs[idx].battery == 0:
 #                print('uav%d is back: ' %idx)
@@ -90,9 +91,11 @@ class Environment:
 #        print(actions)
 #        print('output: ',output)
         reward,final_rate = self.calculate_reward()
+        obs_reward = []
         for idx in range(self.nUAV):
-            reward[idx] = sum(reward[idx])
-        return states_,reward
+#            print('reward%d: '%idx ,reward[idx] )
+            obs_reward.append(sum(reward[idx]))
+        return states_,obs_reward
 
     def get_states(self,nuav):
         return [self.uavs[idx].get_states() for idx in range(nuav)]
@@ -147,6 +150,7 @@ class Environment:
                     uav_cal_coord = np.hstack((nuav.coord_x,nuav.coord_y))
                     uav2user_dist = math.sqrt((nuav.coord_z**2) + sum(self.list_sqadd(uav_cal_coord,user_coord)))*10
 #                    uav2uav_coord.append(np.hstack(nuav.coord_x,nuav.coord_y,nuav.coord_z))
+#                    print('u2u_dist: ', uav2user_dist)
                     if uav2user_dist < 100:
                         theta = math.atan(nuav.coord_z / uav2user_dist)
                         probability_los = (1 + alpha * math.exp(-belta * ((180 / math.pi) * theta - alpha))) ** (-1)
@@ -161,6 +165,7 @@ class Environment:
                         power_uav = trans_power * ((4 * math.pi * freq / c) ** (-2)) * (1 / uav2user_dist) * (
                                 uav_los + uav_nlos) ** (-1)
                         selected_uav_id = nuav.id
+#                        print('uav_id: ',nuav.id, 'episode_row: ', i , 'episode_column: ', j,'power: ', power_uav)
                         break
                 #计算uav间距离
 

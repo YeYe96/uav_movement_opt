@@ -41,9 +41,9 @@ agent3_critic_target_init, agent3_critic_target_update = create_init_update('age
 def get_agents_action(o_n, sess, noise_rate=0):
 #    print(o_n[1])
 #    print(np.shape(np.random.rand(7)))
-    agent1_action = agent1_ddpg.action(state=[o_n[0]], sess=sess) + np.random.randn(7) * noise_rate
-    agent2_action = agent2_ddpg.action(state=[o_n[1]], sess=sess) + np.random.randn(7) * noise_rate
-    agent3_action = agent3_ddpg.action(state=[o_n[2]], sess=sess) + np.random.randn(7) * noise_rate
+    agent1_action = agent1_ddpg.action(state=[o_n[0]], sess=sess) + np.random.randn(1) * noise_rate
+    agent2_action = agent2_ddpg.action(state=[o_n[1]], sess=sess) + np.random.randn(1) * noise_rate
+    agent3_action = agent3_ddpg.action(state=[o_n[2]], sess=sess) + np.random.randn(1) * noise_rate
     return agent1_action, agent2_action, agent3_action
 
 def train_agent(agent_ddpg, agent_ddpg_target, agent_memory, agent_actor_target_update, agent_critic_target_update, sess, other_actors):
@@ -65,7 +65,7 @@ def train_agent(agent_ddpg, agent_ddpg_target, agent_memory, agent_actor_target_
     target = rew_batch.reshape(-1, 1) + 0.9999 * agent_ddpg_target.Q(state=next_obs_batch, action=agent_ddpg.action(next_obs_batch, sess),
                                                                      other_action=next_other_action, sess=sess)
 #    print('ob_shape: ',np.shape(obs_batch))
-    print('oab_shape: ', np.shape(other_act_batch))
+#    print('oab_shape: ', np.shape(other_act_batch))
     agent_ddpg.train_actor(state=obs_batch, other_action=other_act_batch, sess=sess)
     agent_ddpg.train_critic(state=obs_batch, action=act_batch, other_action=other_act_batch, target=target, sess=sess)
 
@@ -159,9 +159,15 @@ if __name__ == '__main__':
             reward_100_list[agent_index].append(r_n[agent_index])
             reward_100_list[agent_index] = reward_100_list[agent_index][-1000:]
 
+#        print('shape_on0: ', np.shape(o_n[0]))
+#        print('shape_agent_act: ', np.shape(agent1_action[0]))
+#        print('shape_reward0: ', np.shape(r_n[0]))
+#        print('shape_o_n_next0: ',np.shape(o_n_next[0]))
+
         agent1_memory.add(np.vstack([o_n[0], o_n[1], o_n[2]]),
                           np.vstack([agent1_action[0], agent2_action[0], agent3_action[0]]),
                           r_n[0], np.vstack([o_n_next[0], o_n_next[1], o_n_next[2]]), False)
+#        print('shape_memory: ', np.shape(agent1_memory))
 
         agent2_memory.add(np.vstack([o_n[1], o_n[2], o_n[0]]),
                           np.vstack([agent2_action[0], agent3_action[0], agent1_action[0]]),
@@ -174,7 +180,7 @@ if __name__ == '__main__':
         if i > 300:
             # e *= 0.9999
             # agent1 train
-            print('shape: ',agent1_memory)
+#            print('shape: ',agent1_memory)
             train_agent(agent1_ddpg, agent1_ddpg_target, agent1_memory, agent1_actor_target_update,
                         agent1_critic_target_update, sess, [agent2_ddpg_target, agent3_ddpg_target])
 
@@ -185,6 +191,7 @@ if __name__ == '__main__':
                         agent3_critic_target_update, sess, [agent1_ddpg_target, agent2_ddpg_target])
             if i % 10000 == 0:
                 print('train')
+#            print('train')
         for agent_index in range(3):
 #            print(agent_index)
             summary_writer.add_summary(
