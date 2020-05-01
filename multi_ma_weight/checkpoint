@@ -1,5 +1,2 @@
-model_checkpoint_path: "3000.cptk"
+model_checkpoint_path: "0.cptk"
 all_model_checkpoint_paths: "0.cptk"
-all_model_checkpoint_paths: "1000.cptk"
-all_model_checkpoint_paths: "2000.cptk"
-all_model_checkpoint_paths: "3000.cptk"

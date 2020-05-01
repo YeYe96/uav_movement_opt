@@ -56,18 +56,19 @@ class Environment:
                            self.uavs[idx].coord_z,
                            self.uavs[idx].battery]
 #            physic_action = np.argmax(a[idx])
-            if 0<a[0]<1/7:
+#            print('a: ', a)
+            if 0<abs(a[0])<1/7:
                 physic_action = 0
-            elif 1/7<a[0]<2/7:
+            elif 1/7<abs(a[0])<2/7:
                 physic_action = 1
-            elif 2/7<a[0]<3/7:
+            elif 2/7<abs(a[0])<3/7:
                 physic_action = 2
-            elif 3/7<a[0]<4/7:
+            elif 3/7<abs(a[0])<4/7:
                 physic_action = 3
-            elif 4/7<a[0]<5/7:
-                physic_action = 4
-            elif 5/7<a[0]<6/7:
+            elif 4/7<abs(a[0])<5/7:
                 physic_action = 5
+            elif 5/7<abs(a[0])<6/7:
+                physic_action = 4
             else:
                 physic_action = 6
             self.uavs_act.append(self.uavs[idx].act(physic_action))
@@ -81,7 +82,7 @@ class Environment:
 #                print('uav%d is back: ' %idx)
                 self.uavs[idx].coord_x = 0
                 self.uavs[idx].coord_y = 0
-                self.uavs[idx].coord_z = 1
+                self.uavs[idx].coord_z = 5
                 self.uavs[idx].battery = 150
             output = {
             "states": self.states,
@@ -95,6 +96,7 @@ class Environment:
         for idx in range(self.nUAV):
 #            print('reward%d: '%idx ,reward[idx] )
             obs_reward.append(sum(reward[idx]))
+#        print('states: ', states_,'reward: ',obs_reward)
         return states_,obs_reward
 
     def get_states(self,nuav):
@@ -107,7 +109,7 @@ class Environment:
         '''
         参数暂时不加
         '''
-        self.uavs = [UAV(0,0,1,150,id) for id in range(self.nUAV)]
+        self.uavs = [UAV(0,0,5,150,id) for id in range(self.nUAV)]
         self.bs_state = np.array([0, 1, 1, 0])
         self.bs_coord = [[7, 7], [7, 19], [19, 7], [19, 19]]
         self.final_rate = []
@@ -122,6 +124,9 @@ class Environment:
         output = 0
         rate_list = []
         power_list = [[0*i] for i in range(self.nUAV)]
+        user_states = np.zeros(26*26)
+#        user_states = np.bool(a.all())
+#        print(a)
 #        rate_list = [[0*i] for  i in range(nUAV)]
         for i in range(26):
             pop_dens_list_row = [lis[i] for lis in pop_dens_list]
@@ -145,30 +150,38 @@ class Environment:
 #                power_uav = [0 for i in range(self.nUAV)]
 #                uav_dist = []
                 count_idx = -1
+                a2g_dist_list = []
+                power_uav_interferenceter=[0]
                 for nuav in self.uavs:
                     count_idx += 1
                     uav_cal_coord = np.hstack((nuav.coord_x,nuav.coord_y))
-                    uav2user_dist = math.sqrt((nuav.coord_z**2) + sum(self.list_sqadd(uav_cal_coord,user_coord)))*10
+                    a2g_dist_list.append(math.sqrt((nuav.coord_z**2) + sum(self.list_sqadd(uav_cal_coord,user_coord)))*10)
+                uav2user_dist = min(a2g_dist_list)
+                dist_idx = np.argmin(a2g_dist_list)
 #                    uav2uav_coord.append(np.hstack(nuav.coord_x,nuav.coord_y,nuav.coord_z))
-#                    print('u2u_dist: ', uav2user_dist)
-                    if uav2user_dist < 100:
-                        theta = math.atan(nuav.coord_z / uav2user_dist)
-                        probability_los = (1 + alpha * math.exp(-belta * ((180 / math.pi) * theta - alpha))) ** (-1)
-                        probability_nlos = 1 - probability_los
-                        uav_los = (probability_los * mulos)
-                        uav_nlos = (probability_nlos * munlos)
-                        '''
-                        power_uav[count_idx] = trans_power * ((4 * math.pi * freq / c) ** (-2)) * (1 / uav2user_dist) * (
-                                uav_los + uav_nlos) ** (-1)
-                        power_list[nuav.id].append(power_uav[count_idx])
-                        '''
-                        power_uav = trans_power * ((4 * math.pi * freq / c) ** (-2)) * (1 / uav2user_dist) * (
-                                uav_los + uav_nlos) ** (-1)
-                        selected_uav_id = nuav.id
+#                print('u2u_dist: ', uav2user_dist)
+#                print('uav_id: ',dist_idx,'u2u_dist: ',uav2user_dist,'uav.coord: ',nuav.get_states())
+                theta = math.atan(self.uavs[dist_idx].coord_z / uav2user_dist)
+                probability_los = (1 + alpha * math.exp(-belta * ((180 / math.pi) * theta - alpha))) ** (-1)
+                probability_nlos = 1 - probability_los
+                uav_los = (probability_los * mulos)
+                uav_nlos = (probability_nlos * munlos)
+                if uav2user_dist < 60 and user_states[i*26+j] == 0:
+                    user_states[i*26+j] = 1
+                    '''
+                    power_uav[count_idx] = trans_power * ((4 * math.pi * freq / c) ** (-2)) * (1 / uav2user_dist) * (
+                            uav_los + uav_nlos) ** (-1)
+                    power_list[nuav.id].append(power_uav[count_idx])
+                    '''
+                    power_uav = self.uavs[dist_idx].cal_power(trans_power,freq,c,uav2user_dist,uav_los,uav_nlos)
+                else:
+                    power_uav_interferenceter.append(self.uavs[dist_idx].cal_power(trans_power,freq,c,uav2user_dist,uav_los,uav_nlos))
+#                    if power_uav != 0:
+#                        print('selected_id: ', self.uavs[dist_idx].id, 'uav_states：',self.uavs[dist_idx].get_states(),'user_coord: ',[i,j])
+                    selected_uav_id = self.uavs[dist_idx].id
 #                        print('uav_id: ',nuav.id, 'episode_row: ', i , 'episode_column: ', j,'power: ', power_uav)
-                        break
+#                        break
                 #计算uav间距离
-
                 power_bs_interference = [0]
 #                if power_bs > max(power_uav):
                 if power_bs > power_uav:
@@ -179,7 +192,7 @@ class Environment:
                             power_bs_interference.append(0)
                     interference_bs = sum(power_bs_interference)
 #                    SINR = power_bs/((N0 * bandwidth + interference_bs + sum(power_uav)))
-                    SINR = power_bs/((N0 * bandwidth + interference_bs + power_uav))
+                    SINR = power_bs/((N0 * bandwidth + interference_bs + power_uav + sum(power_uav_interferenceter)))
                     rate_list.append((bandwidth * math.log2(1 + SINR)) * user_dens)
                 else:
                     for l in  range(len(bs_dist)):
@@ -189,35 +202,38 @@ class Environment:
                         else:
                             power_bs_interference.append(0)
                     interference_bs = sum(power_bs_interference)
-                    SINR = power_uav / ((N0 * bandwidth + interference_bs))
+                    SINR = power_uav / ((N0 * bandwidth + interference_bs + sum(power_uav_interferenceter)))
 #                    SINR = max(power_uav) / ((N0 * bandwidth + interference_bs + sum(power_uav) - max(power_uav)))
                     rate_list.append((bandwidth * math.log2(1 + SINR)) * user_dens)
-                    self.uavs[selected_uav_id].update_reward((bandwidth * math.log2(1 + SINR)) * user_dens)
-                    power_list[selected_uav_id].append((bandwidth * math.log2(1 + SINR)) * user_dens)
+                    self.uavs[dist_idx].update_reward((bandwidth * math.log2(1 + SINR)) * user_dens)
+                    power_list[dist_idx].append(int((bandwidth * math.log2(1 + SINR)) * user_dens//1))
 
 #        self.count += 1
 #        print('sum_rate%d: '%self.count, sum(rate_list)/self.nUAV)
 #        uav_rate_list = []
 #        for idx in range(self.nUAV):
 #            uav_rate_list[idx].append(sum(power_list[idx]))
-        if sum(rate_list) == 0:
-            states = []
-            for idx, a in enumerate(actions):
+#        if sum(rate_list) == 0:
+#            states = []
+#            for idx, a in enumerate(actions):
                 #            print("states %d: " %(idx), self.uavs[idx].get_states())
-                states.append([self.uavs[idx].coord_x,
-                               self.uavs[idx].coord_y,
-                               self.uavs[idx].coord_z])
+#                states.append([self.uavs[idx].coord_x,
+#                               self.uavs[idx].coord_y,
+#                               self.uavs[idx].coord_z])
 #            print(states)
         self.final_rate.append(sum(rate_list))
+#        print(power_list)
         return power_list,sum(self.final_rate) / 150*self.nUAV
 
 if __name__=="__main__":
-    nUAV = 10
+    nUAV = 3
     env = Environment(nUAV)
     env.reset()
+    print(pop_dens_list)
     print(env.uavs)
-    for i in range(1000):
-        actions = np.random.randint(0,7,nUAV)
+    for i in range(5000):
+        print('episode: ',i)
+        actions = np.random.rand(nUAV,2)
         act = env.step(actions)
 #        print(sum([env.uavs[idx].get_reward() for idx in range(nUAV)]) / 10)
 #        print(env.step(actions))

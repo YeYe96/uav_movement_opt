@@ -177,7 +177,7 @@ if __name__ == '__main__':
                           np.vstack([agent3_action[0], agent1_action[0], agent2_action[0]]),
                           r_n[2], np.vstack([o_n_next[2], o_n_next[0], o_n_next[1]]), False)
 
-        if i > 300:
+        if i > 50000:
             # e *= 0.9999
             # agent1 train
 #            print('shape: ',agent1_memory)

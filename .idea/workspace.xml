@@ -41,27 +41,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Python.multi_agent_maddpg">
-    <configuration name="MAPG" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="uav_movement_opt" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/algorithms/MADDPG" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/algorithms/MADDPG/MAPG.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="ma_environment" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="uav_movement_opt" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -75,6 +54,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ma_environment.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="model_agent_maddpg" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="uav_movement_opt" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/model_agent_maddpg.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -149,10 +149,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.multi_agent_maddpg" />
-        <item itemvalue="Python.test_multi_agent_maddpg" />
         <item itemvalue="Python.ma_environment" />
+        <item itemvalue="Python.model_agent_maddpg" />
+        <item itemvalue="Python.test_multi_agent_maddpg" />
         <item itemvalue="Python.test_env" />
-        <item itemvalue="Python.MAPG" />
       </list>
     </recent_temporary>
   </component>
@@ -179,28 +179,28 @@
     </state>
     <state x="549" y="186" key="FileChooserDialogImpl/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1586505026178" />
     <state x="549" y="186" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1585140464357" />
-    <state width="1515" height="175" key="GridCell.Tab.0.bottom" timestamp="1588248880126">
+    <state width="1515" height="175" key="GridCell.Tab.0.bottom" timestamp="1588345280235">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1515" height="175" key="GridCell.Tab.0.bottom/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588248880126" />
+    <state width="1515" height="175" key="GridCell.Tab.0.bottom/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588345280235" />
     <state width="1059" height="684" key="GridCell.Tab.0.bottom/0.0.1536.824/1920.0.1080.1880@1920.0.1080.1880" timestamp="1586492817569" />
     <state width="1515" height="178" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1585237145037" />
-    <state width="1515" height="175" key="GridCell.Tab.0.center" timestamp="1588248880125">
+    <state width="1515" height="175" key="GridCell.Tab.0.center" timestamp="1588345280235">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1515" height="175" key="GridCell.Tab.0.center/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588248880125" />
+    <state width="1515" height="175" key="GridCell.Tab.0.center/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588345280235" />
     <state width="1059" height="684" key="GridCell.Tab.0.center/0.0.1536.824/1920.0.1080.1880@1920.0.1080.1880" timestamp="1586492817569" />
     <state width="1515" height="178" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1585237145037" />
-    <state width="1515" height="175" key="GridCell.Tab.0.left" timestamp="1588248880125">
+    <state width="1515" height="175" key="GridCell.Tab.0.left" timestamp="1588345280235">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1515" height="175" key="GridCell.Tab.0.left/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588248880125" />
+    <state width="1515" height="175" key="GridCell.Tab.0.left/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588345280235" />
     <state width="1059" height="684" key="GridCell.Tab.0.left/0.0.1536.824/1920.0.1080.1880@1920.0.1080.1880" timestamp="1586492817569" />
     <state width="1515" height="178" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1585237145037" />
-    <state width="1515" height="175" key="GridCell.Tab.0.right" timestamp="1588248880125">
+    <state width="1515" height="175" key="GridCell.Tab.0.right" timestamp="1588345280235">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1515" height="175" key="GridCell.Tab.0.right/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588248880125" />
+    <state width="1515" height="175" key="GridCell.Tab.0.right/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588345280235" />
     <state width="1059" height="684" key="GridCell.Tab.0.right/0.0.1536.824/1920.0.1080.1880@1920.0.1080.1880" timestamp="1586492817569" />
     <state width="1515" height="178" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1585237145037" />
     <state width="1515" height="261" key="GridCell.Tab.1.bottom" timestamp="1587387488554">
@@ -236,10 +236,10 @@
     <state x="2239" y="538" key="com.intellij.ide.util.TipDialog/0.0.1536.824/1920.0.1080.1880@1920.0.1080.1880" timestamp="1586440327868" />
     <state x="454" y="236" key="com.intellij.ide.util.TipDialog/0.0.1536.824/1920.0.1920.1040@0.0.1536.824" timestamp="1586047281777" />
     <state x="454" y="236" key="com.intellij.ide.util.TipDialog/0.0.1536.824@0.0.1536.824" timestamp="1585296392040" />
-    <state x="1920" y="110" width="1022" height="609" maximized="true" key="dock-window-1" timestamp="1588248941401">
+    <state x="1920" y="116" width="1096" height="609" maximized="true" key="dock-window-1" timestamp="1588316433206">
       <screen x="1920" y="0" width="1080" height="1880" />
     </state>
-    <state x="1920" y="110" width="1022" height="609" maximized="true" key="dock-window-1/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588248941401" />
+    <state x="1920" y="116" width="1096" height="609" maximized="true" key="dock-window-1/0.0.1536.824/1920.0.1080.1880@0.0.1536.824" timestamp="1588316433206" />
     <state x="238" y="93" width="1096" height="812" maximized="true" key="dock-window-2" timestamp="1586958128758">
       <screen x="0" y="0" width="1536" height="824" />
     </state>

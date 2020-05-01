@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import math
 
 class UAV():
     action_space = np.array([0,1,2,3,4,5,6])
@@ -23,9 +24,9 @@ class UAV():
         if action == 3:
             self._sub_y()
         if action == 4:
-            self._add_z()
-        if action == 5:
             self._sub_z()
+        if action == 5:
+            self._add_z()
         if action == 6:
             self._hover()
         self.battery -= 1
@@ -59,6 +60,11 @@ class UAV():
         self.coord_x += 0
         self.coord_y += 0
         self.coord_z += 0
+
+    def cal_power(self,trans_power,freq,c,dist,los,nlos):
+        power = trans_power*((4 * math.pi * freq / c) ** (-2)) * (1 / dist) * (
+                                los + nlos) ** (-1)
+        return power
 
     def update_reward(self, reward):
         self.current_reward += reward
